@@ -28,7 +28,7 @@ defmodule SimpleSSO.MixProject do
     [
       {:oauth2, "~> 0.9"},
       {:phoenix, "~> 1.2"},
-      {:simple_auth, "~> 1.6.0"},
+      {:simple_auth, "~> 1.6.1"},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end

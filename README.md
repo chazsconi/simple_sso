@@ -27,9 +27,11 @@ end
 
 ```elixir
 config :simple_auth,
-  user_session_api: SimpleAuth.UserSession.HTTPSession,
+  user_session_api: SimpleAuth.UserSession.Memory,
+  session_expiry_seconds: 3600,
   login_url: {SimpleSSO.OAuthController, :authorize_url},
   error_view: MyApp.ErrorView,
+  user_model: MyApp.User #Optional - if not specified a map is stored as the user
 
 config :simple_sso,
   error_view: MyApp.ErrorView,
@@ -62,39 +64,30 @@ end
 ### Single sign out (Optional)
 Add the following optional route if you want single sign out also:
 ```elixir
-pipeline :remote_ajax do
+pipeline :api do
   plug(:accepts, ["json"])
-  plug(:fetch_session)
-  plug(:put_secure_browser_headers)
 end
 
 scope "/" do
-  pipe_through(:remote_ajax)
-  delete("/logout", SimpleSSO.OAuthController, :logout) # or alternative logout path
+  pipe_through(:api)
+  delete("/api/logout", SimpleSSO.OAuthController, :logout_api)
 end
 ```
 
-Also provide a logout link to the SSO Provider's logout URL and ensure that the onclick action
-of the logout button here triggers something similar to this:
-
-```html
-<a href="/logout" onclick="remoteLogout()">Logout</a>
+In the provider you must call this URL to force all sessions for the user to logout
+e.g.
 ```
-
-```javascript
-remoteLogout = function() {
-	$.ajax({
-		url: 'http://my-site/logout',
-		type: 'DELETE',
-		success: function(result) {
-			true;
-		}
-	});
-	return true;
-};
+  DELETE http://my-site/api/logout?user_id=1234
 ```
+If there are multiple OAuth consumers, multiple logouts can be done here by posting to each URL.
 
-If there are multiple OAuth consumers, multiple logouts can be done here.
+In your app just set the logout link to the provider's logout UI link.
+
+Therefore the process will be as follows:
+1. User clicks on logout link
+2. Logout action is executed on provider site
+3. Provider backend sends API calls to each OAuth consumers passing the user id
+4. The OAuth consumer controller (within SimpleSSO controller) deletes the in memory session for the user.
 
 ## Provider requirements
 The OAuth2 provider must have the following endpoints:
