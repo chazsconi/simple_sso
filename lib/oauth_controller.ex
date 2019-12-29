@@ -71,6 +71,7 @@ defmodule SimpleSSO.OAuthController do
       redirect_uri: Application.get_env(:simple_sso, :oauth)[:redirect_uri],
       site: Application.get_env(:simple_sso, :oauth)[:site]
     )
+    |> OAuth2.Client.put_serializer("application/json", Jason)
   end
 
   defp error_view, do: Application.get_env(:simple_sso, :error_view)

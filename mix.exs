@@ -26,7 +26,7 @@ defmodule SimpleSSO.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:oauth2, "~> 0.9"},
+      {:oauth2, "~> 2.0"},
       {:phoenix, "~> 1.2"},
       {:simple_auth, "~> 1.6"},
       {:ex_doc, ">= 0.0.0", only: :dev}
