@@ -13,7 +13,7 @@ defmodule SimpleSSO.OAuthController do
   end
 
   def auth_callback(conn, %{"code" => code}) do
-    client = init_client()
+    client = init_client(conn)
 
     authorized_client =
       client
@@ -59,17 +59,17 @@ defmodule SimpleSSO.OAuthController do
   end
 
   @doc "Used in SimpleAuth as the login_url"
-  def authorize_url() do
-    OAuth2.Client.authorize_url!(init_client(), scope: "read")
+  def authorize_url(conn) do
+    OAuth2.Client.authorize_url!(init_client(conn), scope: "read")
   end
 
-  defp init_client do
+  defp init_client(conn) do
     OAuth2.Client.new(
       strategy: OAuth2.Strategy.AuthCode,
       client_id: Application.get_env(:simple_sso, :oauth)[:client_id],
       client_secret: Application.get_env(:simple_sso, :oauth)[:client_secret],
-      redirect_uri: Application.get_env(:simple_sso, :oauth)[:redirect_uri],
-      site: Application.get_env(:simple_sso, :oauth)[:site]
+      redirect_uri: redirect_uri(conn, Application.get_env(:simple_sso, :oauth)[:redirect_uri]),
+      site: site(conn, Application.get_env(:simple_sso, :oauth)[:site])
     )
     |> OAuth2.Client.put_serializer("application/json", Jason)
   end
@@ -78,4 +78,10 @@ defmodule SimpleSSO.OAuthController do
   defp current_user_path, do: Application.get_env(:simple_sso, :current_user_path)
   defp post_login_path, do: Application.get_env(:simple_auth, :post_login_path)
   defp user_model(), do: Application.get_env(:simple_auth, :user_model)
+
+  defp redirect_uri(_conn, uri) when is_binary(uri), do: uri
+  defp redirect_uri(conn, {module, function}), do: apply(module, function, [conn])
+
+  defp site(_conn, uri) when is_binary(uri), do: uri
+  defp site(conn, {module, function}), do: apply(module, function, [conn])
 end
